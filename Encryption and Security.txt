@@ -1,0 +1,413 @@
+1. IDENTITY:
+From the given CREATE TABLE statement, a new table called Marital_Status_Type is created using the IDENTITY property for an automatically incrementing Marital_Status_Type_ID.
+IDENTITY[(seed , increment)] - IDENTITY(1,1)
+Seed = 1; Increment = 1
+Seed is the value that is used for very first row loaded into the table. In thsi case it is 1.
+Increment is the value that is added to the identity value in the previous row that was loaded. Every time a row is loaded, 1 is added to the last added Marital_Status_Type_ID.
+
+2. IDENTITY values when used, provides integer values that uniquely identifies each row. When the Identity column is 
+set as Primary Key, they become the unique identifiers of each row and avoid dupicate values.
+
+3. As given in the other insert statements as part of the script, only values other than the ones specified as Identity were mentioned in te Insert statement values.. Since, the identity value will be incremeted by the value set to increment from the row that was last added to the table, thereby making the row uniquely identifiable. 
+
+-------------------------------------------------------------------------
+1. What is a role?
+Role is an enforcement to define which users have access to data withing each sensitivity class: High, low and meadium 
+sensitvity.
+
+2.
+The administrator defines and manages permissions to the objects, data and functionality of an installation of the database system, as well as the databases that reside within these systems using the enfoced roles.
+
+3. How do these two "adds" actually implement the hierarchy?
+- All users within the Sensitive_medium role have access to the items granted to the Sensitive_low role.
+- All users within the Sensitive_high role have access to the items granted to the Sensistive_medium role, which in turn have access to the Sernsitive_low rule.
+
+-------------------------------------------------------------------
+1. Why do this process on a view rather than a base table?
+- By creatng views that only exposes low - sensitive data, we can prevent the end users whose role do not have authorization to view any data in the base table. Base table may contain a mixture of low, medium and high sensitivity columns and if a user had direct access to base table, preventing the user from viewing high sensitivity data will become difficult.
+
+2.What does the GRANT statement accomplish?
+Whoever accesses the table objects other than DBO, nothing would appear.Hence, we need to Grant permissions to view objects. Since the columns used in the view ae of Medium sensitivity, permissions are to be granted to access this view to the database role - "Sensitive medium".Users should not be allowed to DELETE the records, UPDATE on records is not possible since the view contains joins to other tables. So, the User is granted a SELECT privilage o the view usng the GRANT statement.
+
+3.DENY
+ We know that, database role named sesitive - high is icluded in the sensitive - medium role. Hence, no explicit permisiions for Sensitive-high is required seperately. This implies that, every member with the role sensitive-medium or sensitive-high have access to the view by default. Though, JOHNSONT is a user having access to medium sensitive data, policies suggest he shouldn't be able to access the view. Hence, DENY command removes teh privlage for HOHNSONT to have access to the view.
+
+4. EXECUTE AS:
+This statement helps in mimicing another user within the database.
+
+5. REVERT:
+This statement terminates the impersonisation and returns to the original user account.
+
+6. What did these test confirm?
+These tests confirms the functioning of heirarchy of encryption key. Only select on view for Roles that are High- sensistive and medium- sensitive are supposed to return result. But the script already denied access to one of the High sensitive roles - HLS_JohnsonT. So, this throws an error output. The select was granted initially for the medium senstive roles. Hence, selection on View as HLS_DoughW returns result. A high sensitive role is also in medium sensitive role. But a low sensitive is not in the medium sensitive role according to heighrarchy. Therefore, the low sensitive - HLS_SmithJ throws error output.
+
+7.Test Results:
+1. -- test the sensativity levels
+
+-- Sensativity high
+EXECUTE AS USER = 'HLS_WolfB'
+go
+ select * from vwBorrower;
+go
+REVERT;
+go
+
+Borrower_ID          Borrower_FName                                     Borrower_LName                                     Marital_Status_Type_Desc                           DOB                                                                                                                                                                                                                                                              Borrower_Address                                   Borrower_City                                      Borrower_State Borrower_Zipcode
+-------------------- -------------------------------------------------- -------------------------------------------------- -------------------------------------------------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------- -------------------------------------------------- -------------- ----------------
+100                  Trisha                                             Griffin                                            Married                                            5/21/1964                                                                                                                                                                                                                                                        225 Oak Road                                       Any Town                                           HI             14213
+101                  Byron                                              Jacobson                                           Seperated                                          7/10/1937                                                                                                                                                                                                                                                        85 Old Freeway                                     Any Town                                           UT             01680
+102                  Joe                                                Beltran                                            Unmarried                                          9/5/1935                                                                                                                                                                                                                                                         767 Rocky Old Drive                                Your Town                                          OK             47581
+103                  Edward                                             Mills                                              Married                                            7/22/1937                                                                                                                                                                                                                                                        655 Clarendon Avenue                               Any Town                                           AL             98626
+104                  Margarita                                          Ponce                                              Seperated                                          1/7/1948                                                                                                                                                                                                                                                         680 First Parkway                                  Your Town                                          OK             11661
+105                  Karin                                              Bright                                             Unmarried                                          3/28/1976                                                                                                                                                                                                                                                        97 South Nobel St.                                 My Town                                            MO             40218
+106                  Sonia                                              Cross                                              Married                                            1/3/1923                                                                                                                                                                                                                                                         628 Fabien Avenue                                  Any Town                                           FL             50605
+107                  Sarah                                              Lindsey                                            Seperated                                          6/26/1944                                                                                                                                                                                                                                                        62 Green Cowley Street                             My Town                                            MO             96963
+108                  Suzanne                                            Franco                                             Unmarried                                          10/8/1988                                                                                                                                                                                                                                                        562 North Oak Drive                                Any Town                                           AR             26130
+109                  Jermaine                                           Arroyo                                             Married                                            7/7/1949                                                                                                                                                                                                                                                         927 Green New Freeway                              Your Town                                          KS             18749
+110                  Hilary                                             Gardner                                            Seperated                                          5/14/1949                                                                                                                                                                                                                                                        255 Milton Avenue                                  Any Town                                           CT             93024
+111                  Aashika                                            Varadharajan                                       Married                                            3/10/1992                                                                                                                                                                                                                                                        1328 Glen Drive                                    My Town                                            MO             14321
+
+(12 rows affected)
+
+
+Completion time: 2020-04-25T04:10:03.0906619-04:00
+
+
+
+EXECUTE AS USER = 'HLS_JohnsonT'
+go
+ select * from vBorrower14;
+go
+REVERT;
+go
+
+Msg 229, Level 14, State 5, Line 3
+The SELECT permission was denied on the object 'vBorrower14', database 'HLS14', schema 'dbo'.
+
+Completion time: 2020-04-25T04:10:46.4789605-04:00
+
+
+EXECUTE AS USER = 'HLS_DoughW'
+go
+ select * from vBorrower14;
+go
+REVERT;
+go
+
+Borrower_ID          Borrower_FName                                     Borrower_LName                                     Marital_Status_Type_Desc                           DOB                                                                                                                                                                                                                                                              Borrower_Address                                   Borrower_City                                      Borrower_State Borrower_Zipcode
+-------------------- -------------------------------------------------- -------------------------------------------------- -------------------------------------------------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------- -------------------------------------------------- -------------- ----------------
+100                  Trisha                                             Griffin                                            Married                                            5/21/1964                                                                                                                                                                                                                                                        225 Oak Road                                       Any Town                                           HI             14213
+101                  Byron                                              Jacobson                                           Seperated                                          7/10/1937                                                                                                                                                                                                                                                        85 Old Freeway                                     Any Town                                           UT             01680
+102                  Joe                                                Beltran                                            Unmarried                                          9/5/1935                                                                                                                                                                                                                                                         767 Rocky Old Drive                                Your Town                                          OK             47581
+103                  Edward                                             Mills                                              Married                                            7/22/1937                                                                                                                                                                                                                                                        655 Clarendon Avenue                               Any Town                                           AL             98626
+104                  Margarita                                          Ponce                                              Seperated                                          1/7/1948                                                                                                                                                                                                                                                         680 First Parkway                                  Your Town                                          OK             11661
+105                  Karin                                              Bright                                             Unmarried                                          3/28/1976                                                                                                                                                                                                                                                        97 South Nobel St.                                 My Town                                            MO             40218
+106                  Sonia                                              Cross                                              Married                                            1/3/1923                                                                                                                                                                                                                                                         628 Fabien Avenue                                  Any Town                                           FL             50605
+107                  Sarah                                              Lindsey                                            Seperated                                          6/26/1944                                                                                                                                                                                                                                                        62 Green Cowley Street                             My Town                                            MO             96963
+108                  Suzanne                                            Franco                                             Unmarried                                          10/8/1988                                                                                                                                                                                                                                                        562 North Oak Drive                                Any Town                                           AR             26130
+109                  Jermaine                                           Arroyo                                             Married                                            7/7/1949                                                                                                                                                                                                                                                         927 Green New Freeway                              Your Town                                          KS             18749
+110                  Hilary                                             Gardner                                            Seperated                                          5/14/1949                                                                                                                                                                                                                                                        255 Milton Avenue                                  Any Town                                           CT             93024
+111                  Aashika                                            Varadharajan                                       Married                                            3/10/1992                                                                                                                                                                                                                                                        1328 Glen Drive                                    My Town                                            MO             14321
+
+(12 rows affected)
+
+
+Completion time: 2020-04-25T04:11:29.8173582-04:00
+
+
+EXECUTE AS USER = 'HLS_SmithJ'
+go
+ select * from vBorrower14;
+go
+REVERT;
+go
+
+Msg 229, Level 14, State 5, Line 3
+The SELECT permission was denied on the object 'vBorrower14', database 'HLS14', schema 'dbo'.
+
+Completion time: 2020-04-25T04:12:49.8301981-04:00
+
+
+EXECUTE AS USER = 'HLS_DoughW'; 
+GO
+SELECT * FROM dbo.Borrower_Identification;
+GO
+REVERT;
+GO
+Borrower_Identification_ID Borrower_ID          Identification_Value                                                                                                                                                                                                                                       Identification_Type_ID
+-------------------------- -------------------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ----------------------
+100                        100                  SSN: 111-22-3333                                                                                                                                                                                                                                           1
+101                        101                  SSN: 222-23-3334                                                                                                                                                                                                                                           1
+102                        103                  SSN: 333-24-3335                                                                                                                                                                                                                                           1
+103                        104                  SSN: 444-25-3336                                                                                                                                                                                                                                           1
+104                        105                  SSN: 555-26-3337                                                                                                                                                                                                                                           1
+105                        106                  SSN: 666-27-3338                                                                                                                                                                                                                                           1
+106                        109                  SSN: 777-29-3310                                                                                                                                                                                                                                           1
+107                        107                  SSN: 777-28-3339                                                                                                                                                                                                                                           1
+108                        100                  Drivers License: 333567                                                                                                                                                                                                                                    2
+109                        104                  Drivers License: 444765                                                                                                                                                                                                                                    2
+110                        106                  Drivers License: 555123                                                                                                                                                                                                                                    2
+111                        100                  Passport: US 2345                                                                                                                                                                                                                                          3
+112                        102                  Passport: GB 998877                                                                                                                                                                                                                                        3
+113                        110                  Passport: US 5689                                                                                                                                                                                                                                          3
+114                        108                  Passport: US 7890                                                                                                                                                                                                                                          3
+115                        108                  EmpID: J329K                                                                                                                                                                                                                                               4
+116                        102                  EmpID: A123B                                                                                                                                                                                                                                               4
+117                        111                  SSN: 190-21-9950                                                                                                                                                                                                                                           1
+
+(18 rows affected)
+
+
+Completion time: 2020-04-25T04:13:49.3247448-04:00
+
+
+EXECUTE AS USER = 'HLS_JohnsonT'; 
+GO
+SELECT * FROM vBorrower14;
+GO
+REVERT;
+GO
+
+Msg 229, Level 14, State 5, Line 15
+The SELECT permission was denied on the object 'vBorrower14', database 'HLS14', schema 'dbo'.
+
+Completion time: 2020-04-25T04:14:43.7573100-04:00
+
+EXECUTE AS USER = 'HLS_DoughW'; 
+GO
+SELECT Borrower_ID, Borrower_Address FROM vBorrower14;
+GO
+REVERT;
+GO
+
+Borrower_ID          Borrower_Address
+-------------------- --------------------------------------------------
+100                  225 Oak Road
+101                  85 Old Freeway
+102                  767 Rocky Old Drive
+103                  655 Clarendon Avenue
+104                  680 First Parkway
+105                  97 South Nobel St.
+106                  628 Fabien Avenue
+107                  62 Green Cowley Street
+108                  562 North Oak Drive
+109                  927 Green New Freeway
+110                  255 Milton Avenue
+111                  1328 Glen Drive
+
+(12 rows affected)
+
+
+Completion time: 2020-04-25T04:15:24.8539133-04:00
+
+---------------------------------------------------------------------------------------------------------------------------
+1. The encrypted data within the Database will have a Database Master Key created before the objects needed t secure the data are created.
+This Database Master Key is secured using the Service Master key and the password that was used to create the Database Master Key. So, to open and access the Database, either of them is required. Since the Database Master key is encrypted by the service master key, the output is suppressed for ordinary users.
+
+
+2. Symmetric keys are used to protect the other symmetric keys as well as data within the database. When an item is encrypted using symmetric key, it must be decrypted using the same key.
+Certificate private key is digitally associated with an individual or device, involves a private/public key pair
+
+
+
+What were the results of the tests above?
+1. -- execute as a user who is a member of Sensitive_high role
+EXECUTE AS USER = 'HLS_WolfB'; 
+GO
+SELECT * FROM sys.symmetric_keys;
+GO
+REVERT;
+GO
+-->
+name                                                                                                                             principal_id symmetric_key_id key_length  key_algorithm algorithm_desc                                               create_date             modify_date             key_guid                             key_thumbprint                                                                                                                                                                                                                                                   provider_type                                                cryptographic_provider_guid          cryptographic_provider_algid
+-------------------------------------------------------------------------------------------------------------------------------- ------------ ---------------- ----------- ------------- ------------------------------------------------------------ ----------------------- ----------------------- ------------------------------------ ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ------------------------------------------------------------ ------------------------------------ ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+(0 rows affected)
+
+
+Completion time: 2020-04-25T14:11:56.8836320-04:00
+
+
+
+-- execute as a user who is a member of Sensitive_medium role
+EXECUTE AS USER = 'HLS_DoughW'; 
+GO
+SELECT * FROM sys.symmetric_keys;
+GO
+REVERT;
+GO
+-->
+name                                                                                                                             principal_id symmetric_key_id key_length  key_algorithm algorithm_desc                                               create_date             modify_date             key_guid                             key_thumbprint                                                                                                                                                                                                                                                   provider_type                                                cryptographic_provider_guid          cryptographic_provider_algid
+-------------------------------------------------------------------------------------------------------------------------------- ------------ ---------------- ----------- ------------- ------------------------------------------------------------ ----------------------- ----------------------- ------------------------------------ ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ------------------------------------------------------------ ------------------------------------ ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+(0 rows affected)
+
+
+Completion time: 2020-04-25T14:12:30.8181537-04:00
+
+
+
+-- execute as a user who is a member of Sensitive_low role
+EXECUTE AS USER = 'HLS_JonesB'; 
+GO
+SELECT * FROM sys.symmetric_keys;
+GO
+REVERT;
+GO
+-->
+name                                                                                                                             principal_id symmetric_key_id key_length  key_algorithm algorithm_desc                                               create_date             modify_date             key_guid                             key_thumbprint                                                                                                                                                                                                                                                   provider_type                                                cryptographic_provider_guid          cryptographic_provider_algid
+-------------------------------------------------------------------------------------------------------------------------------- ------------ ---------------- ----------- ------------- ------------------------------------------------------------ ----------------------- ----------------------- ------------------------------------ ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ------------------------------------------------------------ ------------------------------------ ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+(0 rows affected)
+
+
+Completion time: 2020-04-25T14:13:21.0035412-04:00
+
+
+
+select * from dbo.borrower_identification;
+Borrower_Identification_ID Borrower_ID          Identification_Value                                                                                                                                                                                                                                       Identification_Type_ID Identification_Value_E
+-------------------------- -------------------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ---------------------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+100                        100                  SSN: 111-22-3333                                                                                                                                                                                                                                           1                      NULL
+101                        101                  SSN: 222-23-3334                                                                                                                                                                                                                                           1                      NULL
+102                        103                  SSN: 333-24-3335                                                                                                                                                                                                                                           1                      NULL
+103                        104                  SSN: 444-25-3336                                                                                                                                                                                                                                           1                      NULL
+104                        105                  SSN: 555-26-3337                                                                                                                                                                                                                                           1                      NULL
+105                        106                  SSN: 666-27-3338                                                                                                                                                                                                                                           1                      NULL
+106                        109                  SSN: 777-29-3310                                                                                                                                                                                                                                           1                      NULL
+107                        107                  SSN: 777-28-3339                                                                                                                                                                                                                                           1                      NULL
+108                        100                  Drivers License: 333567                                                                                                                                                                                                                                    2                      NULL
+109                        104                  Drivers License: 444765                                                                                                                                                                                                                                    2                      NULL
+110                        106                  Drivers License: 555123                                                                                                                                                                                                                                    2                      NULL
+111                        100                  Passport: US 2345                                                                                                                                                                                                                                          3                      NULL
+112                        102                  Passport: GB 998877                                                                                                                                                                                                                                        3                      NULL
+113                        110                  Passport: US 5689                                                                                                                                                                                                                                          3                      NULL
+114                        108                  Passport: US 7890                                                                                                                                                                                                                                          3                      NULL
+115                        108                  EmpID: J329K                                                                                                                                                                                                                                               4                      NULL
+116                        102                  EmpID: A123B                                                                                                                                                                                                                                               4                      NULL
+117                        111                  SSN: 190-21-9950                                                                                                                                                                                                                                           1                      NULL
+
+(18 rows affected)
+
+
+Completion time: 2020-04-25T14:14:07.5795710-04:00
+
+
+
+SELECT Table_Name, Column_Name, Data_Type
+FROM HLS14.INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'Borrower_Identification'
+
+Table_Name                                                                                                                       Column_Name                                                                                                                      Data_Type
+-------------------------------------------------------------------------------------------------------------------------------- -------------------------------------------------------------------------------------------------------------------------------- --------------------------------------------------------------------------------------------------------------------------------
+Borrower_Identification                                                                                                          Borrower_Identification_ID                                                                                                       bigint
+Borrower_Identification                                                                                                          Borrower_ID                                                                                                                      bigint
+Borrower_Identification                                                                                                          Identification_Value                                                                                                             varchar
+Borrower_Identification                                                                                                          Identification_Type_ID                                                                                                           int
+Borrower_Identification                                                                                                          Identification_Value_E                                                                                                           varbinary
+
+(5 rows affected)
+
+
+Completion time: 2020-04-25T14:17:28.9036390-04:00
+
+
+
+Why add an extra column, why not just work on the original data?
+--> For cell level encryption, it requires schema modifications. All encrypted data must be stored with varbinary data type since the encryption methods, returns their cipher text in varbinary.  The sensitivity classification of "High" is the Identification_Value, this information is being stored in plain text using the varchar data type. In order to implement cell-level encryption,  a column is created in our table that will capture the encrypted value as a varbinary data type. Hence, at a later stage, the column with high sensitive data stored in plain text can be deleted at a later stage.
+
+
+-- Question: What is the purpose of this view?
+Using the cell level encryption, the sensitive data that is being stored in the Borrowe_identification table is now protected. The views and the stored procedures can interact with the Borrowe_identification table. If a user who calls this view do not have permissions to open the symmetric keys that are protected using certificates, the values decrypted will return NULL. 
+
+
+What is the purpose of this GRANT?
+Since there are no columns with Sensitivity low, the permission to view for Senistive - high and medium roles. The column that has High sensitivity classification is managed through permissions to the symmetric key that decrypts it. This GRANT gives the permission to symmetric key for the high and medium roles.
+
+-- execute as a user who is a member of Sensitive_high role
+EXECUTE AS USER = 'HLS_WolfB'; 
+GO
+SELECT * FROM dbo.vwBorrower_Identification;
+GO
+REVERT;
+GO
+-->
+Borrower_Identification_ID Borrower_ID          Identification_Type_ID Identification_Value
+-------------------------- -------------------- ---------------------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+100                        100                  1                      <SECURED VALUE>
+101                        101                  1                      <SECURED VALUE>
+102                        103                  1                      <SECURED VALUE>
+103                        104                  1                      <SECURED VALUE>
+104                        105                  1                      <SECURED VALUE>
+105                        106                  1                      <SECURED VALUE>
+106                        109                  1                      <SECURED VALUE>
+107                        107                  1                      <SECURED VALUE>
+108                        100                  2                      <SECURED VALUE>
+109                        104                  2                      <SECURED VALUE>
+110                        106                  2                      <SECURED VALUE>
+111                        100                  3                      <SECURED VALUE>
+112                        102                  3                      <SECURED VALUE>
+113                        110                  3                      <SECURED VALUE>
+114                        108                  3                      <SECURED VALUE>
+115                        108                  4                      <SECURED VALUE>
+116                        102                  4                      <SECURED VALUE>
+117                        111                  1                      <SECURED VALUE>
+
+(18 rows affected)
+
+
+Completion time: 2020-04-25T15:18:52.5418312-04:00
+
+
+EXECUTE AS USER = 'HLS_DoughW'; 
+GO
+SELECT * FROM dbo.vwBorrower_Identification;
+GO
+REVERT;
+GO
+-->
+Borrower_Identification_ID Borrower_ID          Identification_Type_ID Identification_Value
+-------------------------- -------------------- ---------------------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+100                        100                  1                      <SECURED VALUE>
+101                        101                  1                      <SECURED VALUE>
+102                        103                  1                      <SECURED VALUE>
+103                        104                  1                      <SECURED VALUE>
+104                        105                  1                      <SECURED VALUE>
+105                        106                  1                      <SECURED VALUE>
+106                        109                  1                      <SECURED VALUE>
+107                        107                  1                      <SECURED VALUE>
+108                        100                  2                      <SECURED VALUE>
+109                        104                  2                      <SECURED VALUE>
+110                        106                  2                      <SECURED VALUE>
+111                        100                  3                      <SECURED VALUE>
+112                        102                  3                      <SECURED VALUE>
+113                        110                  3                      <SECURED VALUE>
+114                        108                  3                      <SECURED VALUE>
+115                        108                  4                      <SECURED VALUE>
+116                        102                  4                      <SECURED VALUE>
+117                        111                  1                      <SECURED VALUE>
+
+(18 rows affected)
+
+
+Completion time: 2020-04-25T15:19:28.6763399-04:00
+
+
+
+EXECUTE AS USER = 'HLS_JonesB'; 
+GO
+SELECT * FROM dbo.vwBorrower_Identification;
+GO
+REVERT;
+GO
+-->
+Msg 229, Level 14, State 5, Line 3
+The SELECT permission was denied on the object 'vwBorrower_Identification', database 'HLS14', schema 'dbo'.
+
+Completion time: 2020-04-25T15:20:01.8904727-04:00
+
+
+
+
+
+
